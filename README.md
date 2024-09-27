@@ -1,0 +1,1 @@
+# HSR Navigation Compass Solver
