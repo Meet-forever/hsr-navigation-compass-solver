@@ -18,11 +18,10 @@ const Ring = ({ index }: { index:number }) => {
         }))
     );
     
-    // console.log(`Index ${index} re-rendered`)
 
     return (<>
         <h2 className="text-2xl font-black">{rings[index]} Ring</h2>
-        <div className="relative w-[30vh] h-[30vh] border border-white rounded-full">
+        <div className="relative w-[20vw] h-[20vw] min-w-[200px] min-h-[200px] max-w-[250px] max-h-[250px] border border-white rounded-full">
             {coordinates.map((value, idx) =>{
                 return(
                     <div key={idx} 

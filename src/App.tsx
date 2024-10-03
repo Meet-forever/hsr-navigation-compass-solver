@@ -1,63 +1,17 @@
 import Ring from "./components/Ring"
 import useRingStore from "./store/ringStore"
-import { useShallow } from "zustand/shallow"
 import Combinations from "./components/Combinations"
-import Queue from "./helper/Queue"
 import { useState } from "react"
-
-
-type bitsData = [number, number, number, number, number, number, number]
-type bfsData = [number, number, number, bitsData]
+import bfs from "./algorithms/BFS"
 
 
 function App() {
 
-    const { rings } = useRingStore(
-        useShallow((state) => ({ rings: state.rings }))
-    )
+    const rings = useRingStore.getState().rings;
 
     const [answer, setAnswer] = useState([0, 0, 0]);
     const [solvable, setSolvable] = useState<boolean>();
-
-    function bfs(){
-        // All the data is in the form of [Inner, Middle, Outer]
-        const {combinations: moves, positions, circles, rotations } = useRingStore.getState();
-        const MOD = 6;
-        const [a, b, c] = positions;
-        const queue = new Queue<bfsData>();
-        queue.push([a, b, c, [0, 0, 0, 0, 0, 0, 0]])
-        const visited = new Set<string>();
-        visited.add(`${a} ${b} ${c}`);
-        while(queue.length !== 0){
-            const [x, y, z, counter] = queue.pop() as bfsData;
-            
-            // We want all the numbers to stop at 4th index
-            if(x === 4 && y === 4 && z === 4){
-                return counter;
-            }
-
-            for(const [dx, dy, dz] of moves){
-                // Calculate the total distance each ring can travel in moves[i]
-                const p = dx * rotations[0] * circles[0], 
-                q = dy * rotations[1] * circles[1],
-                r = dz * rotations[2] * circles[2];
-                
-                // Calculate the next position of rings
-                const i = (MOD + x + p) % MOD, 
-                j = (MOD + y + q) % MOD, 
-                k = (MOD + z + r) % MOD;
-
-                if (!visited.has(`${i} ${j} ${k}`)){
-                    visited.add(`${i} ${j} ${k}`)
-                    const num = 0 | (dx << 2) | (dy << 1) | dz;
-                    queue.push([i, j, k, counter.map((value, idx) => value + Number(num === idx)) as bitsData])
-                }
-            }
-        }
-        return [];
-    }
-
-
+        
     const handleSolve = () => {
         setSolvable(undefined);
         const result = bfs();
@@ -66,13 +20,16 @@ function App() {
             setAnswer([0, 0, 0]);
             return;
         }
-        const rotation_counter = Object.fromEntries(result.map((value, index) => [value, index])
-        .filter((value) => value[0] !== 0)
-        .map((value) => value.reverse()));
+
+        // Filter out all the zero value and create a counter object for lookup
+        const rotation_counter = Object.fromEntries(result.map((count, index) => [index, count])
+            .filter((entry) => entry[1] !== 0));  
         
         setSolvable(true);
+        
+        // For each combination, count how many rotations will be required
         setAnswer(useRingStore.getState().combinations.map((combination) => {
-            const number = 0  | (combination[0] << 2) | (combination[1] << 1) | combination[2];
+            const number = (combination[0] << 2) | (combination[1] << 1) | combination[2]; // Converting binary number to decimal
             if(String(number) in rotation_counter) return rotation_counter[String(number)];
             return 0;
         }))
